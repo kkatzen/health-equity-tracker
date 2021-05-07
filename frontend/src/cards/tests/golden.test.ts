@@ -1,3 +1,4 @@
+import puppeteer from "puppeteer";
 import resemblejs from "resemblejs";
 import compareImages from "resemblejs/compareImages";
 import * as fs from "fs-extra";
@@ -7,12 +8,24 @@ describe("GOlden tests", () => {
   beforeEach(() => {});
 
   test("State and Race Breakdown", async () => {
-    const file1 = await fs.readFile(
-      "/Users/kristak/Documents/GitHub/health-equity-tracker-fork/health-equity-tracker/frontend/public/img/het-screen-1.png"
-    );
-    const file2 = await fs.readFile(
-      "/Users/kristak/Documents/GitHub/health-equity-tracker-fork/health-equity-tracker/frontend/public/img/het-screen-2.png"
-    );
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto("http://localhost:3000/");
+    await page.screenshot({ path: "localhost.png" });
+
+    const dimensions = await page.evaluate(() => {
+      return {
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight,
+        deviceScaleFactor: window.devicePixelRatio,
+      };
+    });
+    console.log(dimensions);
+
+    await browser.close();
+
+    const file1 = await fs.readFile("localhost.png");
+    const file2 = await fs.readFile("testGolden.png");
     const options = {
       output: {
         errorColor: {
@@ -33,7 +46,7 @@ describe("GOlden tests", () => {
     var diff = resemblejs(file1)
       .compareTo(file2)
       .onComplete((data: any) => {
-        console.log("data");
+        console.log(data);
         /*
 	{
 	  misMatchPercentage : 100, // %
